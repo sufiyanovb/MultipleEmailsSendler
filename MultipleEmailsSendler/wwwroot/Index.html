@@ -1,0 +1,238 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+
+    <title>Список Email</title>
+
+    <!-- For the plug-in dependencies -->
+    <script type="text/javascript" src='https://code.jquery.com/jquery-latest.min.js'></script>
+
+
+
+
+    <!-- For Semantic UI Button -->
+    <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/1.12.2/semantic.min.css" />
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/1.12.2/semantic.min.js"></script>
+
+    <!-- For Bootstrap UI Button -->
+    <link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
+    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
+
+    <script type="text/javascript" src="multiple-emails.js"></script>
+    <link type="text/css" rel="stylesheet" href="multiple-emails.css" />
+
+
+</head>
+<body>
+    <h2>Список Email</h2>
+
+    <div id="errors" class="alert alert-danger" style="display:none;"></div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <form name="emailForm">
+                <input type="hidden" name="id" value="0" />
+                <div class="form-group col-md-12">
+                    <label for="subject" class="control-label">Тема сообщения:</label>
+                    <input type="text" class="form-control" name="subject" />
+                </div>
+                <div class="form-group col-md-12">
+                    <label for="body" class="control-label">Текст сообщения:</label>
+                    <input type="text" class="form-control" name="body" />
+                </div>
+                <div class="form-group col-md-12">
+                    <label for="recipients">Получатели:</label>
+                    <div id="inputcontainer">
+                        <input type="text" id="recipients" class="form-control" name="recipients">
+                    </div>
+                </div>
+                <!--<div class="form-group col-md-12">
+                    <label for="mailFrom" class="control-label">Отправитель:</label>
+                    <input type="text" class="form-control" name="mailFrom" />
+                </div>-->
+                <div class="panel-body">
+                    <button type="submit" id="submit" class="btn btn-primary">Сохранить</button>
+                    <a id="reset" class="btn btn-primary">Сбросить</a>
+                </div>
+            </form>
+
+
+
+        </div>
+    </div>
+
+    <table class="table table-condensed table-striped  col-md-6">
+        <thead>
+            <tr>
+                <th rowspan="2">Id</th>
+                <th rowspan="2">subject</th>
+                <th rowspan="2">body</th>
+                <th rowspan="2">mailFrom</th>
+                <th colspan="4">Recipients</th>
+            </tr>
+            <tr>
+                <th>Recipient</th>
+                <th>SendDate</th>
+                <th>SendState</th>
+                <th>ExceptionMessage</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+
+</body>
+</html>
+<div id="ajax-loader" style="display: none; width: 69px; height: 89px; border: 1px solid black; position: absolute; top: 50%; left: 50%; padding: 2px;">
+    <img src="loader.gif" width="64" height="64" alt="" /><br>
+</div>
+<script>
+
+    $(document).on('keyup keypress', 'form input[type="text"]', function (e) {
+        if (e.keyCode == 13) {
+            //    console.log(e.keyCode);
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    $(function () {
+        $('#recipients').multiple_emails("Bootstrap");
+    });
+
+    // Получение всех записей
+    function GetMails() {
+        $.ajax({
+            url: '/api/mails',
+            type: 'GET',
+            contentType: "application/json",
+            success: function (mails) {
+                var rows = "";
+                window.$.each(mails,
+                    function (index, mail) {
+                        // добавляем полученные элементы в таблицу
+                        //  console.log(mail);
+                        rows += row(mail);
+                    });
+                window.$("table tbody").append(rows);
+            }
+        });
+    }
+
+    // Добавление записи
+    function CreateMail(subject, body, recipients) {
+
+        $.ajax({
+            url: "api/mails",
+            contentType: "application/json",
+            method: "POST",
+            data: JSON.stringify({
+                subject: subject,
+                body: body,
+                recipients: recipients
+            }),
+            success: function (mail) {
+                reset();
+                $("table tbody").append(row(mail));
+            },
+            beforeSend: function () {
+                $("#ajax-loader").show();
+            },
+            complete: function () {
+                $("#ajax-loader").hide();
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                const errorData = XMLHttpRequest.responseJSON.errors;
+
+                if (errorData) {
+                    $.each(errorData, function (index, value) {
+                        addError(value);
+                    });
+
+                }
+                document.getElementById("errors").style.display = "block";
+            }
+        });
+
+    }
+
+    // сброс формы
+    function reset() {
+        var form = document.forms["emailForm"];
+        form.reset();
+        $("#inputcontainer > div > ul").text("");
+        form.elements["id"].value = 0;
+    }
+
+    // создание строки для таблицы
+    var row = function (email) {
+
+
+        var str = "";
+        $.each(email.recipients, function (index, value) {
+            // console.log(value);
+
+            str += "<tr data-rowid='" + email.id + ((index === 0) ? "' rowspan='" + email.recipients.length : "") + "'>" +
+                "<td>" + ((index === 0) ? email.id : "") + "</td>" +
+                "<td>" + ((index === 0) ? email.subject : "") + "</td> " +
+                "<td>" + ((index === 0) ? email.body : "") + "</td>" +
+                "<td>" + ((index === 0) ? email.mailFrom : "") + "</td>" +
+                "<td>" + value.recipient + "</td>" +
+                "<td>" + new Date(value.sendDate).toLocaleString("ru-Ru") + "</td>" +
+                "<td>" + value.sendState + "</td>" +
+                "<td>" + value.exceptionMessage + "</td>" +
+                "</tr>";
+        });
+        return str;
+    };
+
+    // сброс значений формы
+    $("#reset").click(function (e) {
+        e.preventDefault();
+        reset();
+    });
+
+    function addError(errors) {
+
+        $.each(errors, function (index, error) {
+
+            const p = document.createElement("p");
+
+            // console.log(error);
+            p.append(error);
+            document.getElementById("errors").append(p);
+
+        });
+    };
+
+    // отправка формы
+    $("form").submit(function (e) {
+
+        e.preventDefault();
+
+        document.getElementById("errors").innerHTML = "";
+        document.getElementById("errors").style.display = "none";
+
+        var id = this.elements["id"].value;
+        var subject = this.elements["subject"].value;
+        var body = this.elements["body"].value;
+        //var mailFrom = this.elements["mailFrom"].value;
+        var recipients = new Array();
+
+        if (this.elements["recipients"].value != "") {
+            $.each(JSON.parse(this.elements["recipients"].value), function (index, value) {
+                var o = new Object();
+                o.Recipient = value;
+                recipients.push(o)
+            });
+        }
+
+        CreateMail(subject, body, recipients);
+
+    });
+
+    GetMails();
+
+</script>
