@@ -146,6 +146,11 @@
             error: function (XMLHttpRequest, textStatus, errorThrown) {
                 const errorData = XMLHttpRequest.responseJSON.errors;
 
+                
+                console.log("textStatus:", XMLHttpRequest.responseJSON);
+                console.log("textStatus:", textStatus);
+                console.log("errorThrown:", errorThrown);
+
                 if (errorData) {
                     $.each(errorData, function (index, value) {
                         addError(value);

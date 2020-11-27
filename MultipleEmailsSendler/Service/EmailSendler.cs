@@ -45,7 +45,7 @@ namespace MultipleEmailsSendler.Service
 
                     using (var smtp = new SmtpClient(_configuration["Host"], int.Parse(_configuration["Port"])))
                     {
-                        smtp.Credentials = new NetworkCredential(_configuration["userNameMail"], _configuration["Password"]);
+                        smtp.Credentials = new NetworkCredential(_configuration["userNameMail"], _configuration["Password"]);//UseDefaultCredentials 
                         smtp.EnableSsl = true;
                         smtp.Send(m);
                         recipient.SendState = SendStatesEnum.OK.ToString();
