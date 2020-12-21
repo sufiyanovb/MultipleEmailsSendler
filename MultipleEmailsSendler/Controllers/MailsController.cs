@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
-using System.Xml;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Configuration;
 using MultipleEmailsSendler.Models;
 using MultipleEmailsSendler.Service;
+using MultipleEmailsSendler.Service.Interfaces;
 
 namespace MultipleEmailsSendler.Controllers
 {
@@ -13,8 +12,8 @@ namespace MultipleEmailsSendler.Controllers
     [ApiController]
     public class MailsController : ControllerBase
     {
-        private readonly EfGenericRepository<Emails> _emailsRepository;
-        private readonly EfGenericRepository<Recipients> _recipientsRepository;
+        private readonly IGenericRepository<Emails> _emailsRepository;
+        private readonly IGenericRepository<Recipients> _recipientsRepository;
         private readonly AppDataContext _context;
         private readonly IConfiguration _configuration;
 
@@ -32,9 +31,9 @@ namespace MultipleEmailsSendler.Controllers
         ///  Получение всех емейлов и связанных с ними получателей
         /// </summary> 
         [HttpGet]
-        public IEnumerable<Emails> Mails()
+        public async Task<IEnumerable<Emails>> Mails()
         {
-            return _context.Emails.Include(i => i.Recipients);
+            return await Task.Run(() => _emailsRepository.GetWithInclude(i => i.Recipients));
         }
         // POST api/values
         /// <summary>  
@@ -44,9 +43,7 @@ namespace MultipleEmailsSendler.Controllers
         public IActionResult Post([FromBody] Emails data)
         {
             if (data == null)
-            {
                 return BadRequest();
-            }
 
             var email = new Emails()
             {
