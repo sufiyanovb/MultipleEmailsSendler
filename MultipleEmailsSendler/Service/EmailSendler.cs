@@ -3,6 +3,7 @@ using System;
 using System.Net;
 using System.Net.Mail;
 using MultipleEmailsSendler.Models;
+using MultipleEmailsSendler.Service.Interfaces;
 
 namespace MultipleEmailsSendler.Service
 {
@@ -11,7 +12,7 @@ namespace MultipleEmailsSendler.Service
         private readonly IConfiguration _configuration;
         private readonly Emails _email;
         private readonly AppDataContext _context;
-        private readonly EfGenericRepository<Recipients> _recipientsRepository;
+        private readonly IGenericRepository<Recipients> _recipientsRepository;
 
         public EmailSendler(IConfiguration configuration, AppDataContext context, Emails email)
         {
