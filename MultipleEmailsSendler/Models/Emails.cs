@@ -41,11 +41,8 @@ namespace MultipleEmailsSendler.Models
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            List<ValidationResult> errors = new List<ValidationResult>();
-
             if (!Recipients.Any())
-                errors.Add(new ValidationResult("Укажите хотя бы одного получателя!!!", new List<string>() { "Recipients" }));
-            return errors;
+                yield return new ValidationResult("Укажите хотя бы одного получателя!!!", new List<string>() { "Recipients" });
         }
     }
 }
