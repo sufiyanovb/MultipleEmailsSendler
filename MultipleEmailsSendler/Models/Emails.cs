@@ -42,7 +42,9 @@ namespace MultipleEmailsSendler.Models
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (!Recipients.Any())
+            {
                 yield return new ValidationResult("Укажите хотя бы одного получателя!!!", new List<string>() { "Recipients" });
+            }
         }
     }
 }

@@ -19,12 +19,12 @@ namespace MultipleEmailsSendler.Controllers
 
         public MailsController(AppDataContext context, IConfiguration configuration)
         {
+            _configuration = configuration;
+
             _context = context;
 
             _emailsRepository = new EfGenericRepository<Emails>(_context);
             _recipientsRepository = new EfGenericRepository<Recipients>(_context);
-
-            _configuration = configuration;
         }
 
         /// <summary>  
@@ -57,7 +57,6 @@ namespace MultipleEmailsSendler.Controllers
             foreach (var rec in data.Recipients)
             {
                 _recipientsRepository.Create(new Recipients { EmailId = email.Id, Recipient = rec.Recipient });
-
             }
 
             new EmailSendler(_configuration, _context, email).SendEmail();
