@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using MultipleEmailsSendler.Models;
 using MultipleEmailsSendler.Service;
-using MultipleEmailsSendler.Service.Interfaces;
 
 namespace MultipleEmailsSendler.Controllers
 {
@@ -12,8 +11,13 @@ namespace MultipleEmailsSendler.Controllers
     [ApiController]
     public class MailsController : ControllerBase
     {
-        private readonly IGenericRepository<Emails> _emailsRepository;
-        private readonly IGenericRepository<Recipients> _recipientsRepository;
+        private readonly EfGenericCommandRepository<Emails> _emailsCommandRepository;
+        private readonly EfGenericQueryRepository<Emails> _emailsQueryRepository;
+
+        private readonly EfGenericCommandRepository<Recipients> _recipientsCommandRepository;
+        private readonly EfGenericQueryRepository<Recipients> _recipientscQueryRepository;
+
+
         private readonly AppDataContext _context;
         private readonly IConfiguration _configuration;
 
@@ -23,8 +27,11 @@ namespace MultipleEmailsSendler.Controllers
 
             _context = context;
 
-            _emailsRepository = new EfGenericRepository<Emails>(_context);
-            _recipientsRepository = new EfGenericRepository<Recipients>(_context);
+            _emailsCommandRepository = new EfGenericCommandRepository<Emails>(_context);
+            _recipientsCommandRepository = new EfGenericCommandRepository<Recipients>(_context);
+
+            _emailsQueryRepository=new EfGenericQueryRepository<Emails>(context);
+            _recipientscQueryRepository=new EfGenericQueryRepository<Recipients>(context);
         }
 
         /// <summary>  
@@ -33,7 +40,7 @@ namespace MultipleEmailsSendler.Controllers
         [HttpGet]
         public async Task<IEnumerable<Emails>> Mails()
         {
-            return await Task.Run(() => _emailsRepository.GetWithInclude(i => i.Recipients));
+            return await Task.Run(() => _emailsCommandRepository.GetWithInclude(i => i.Recipients));
         }
         // POST api/values
         /// <summary>  
@@ -43,8 +50,9 @@ namespace MultipleEmailsSendler.Controllers
         public IActionResult Post([FromBody] Emails data)
         {
             if (data == null)
+            {
                 return BadRequest();
-
+            }
             var email = new Emails()
             {
                 Subject = data.Subject,
@@ -52,11 +60,11 @@ namespace MultipleEmailsSendler.Controllers
                 MailFrom = _configuration["userNameMail"]
             };
 
-            _emailsRepository.Create(email);
+            _emailsQueryRepository.Create(email);
 
             foreach (var rec in data.Recipients)
             {
-                _recipientsRepository.Create(new Recipients { EmailId = email.Id, Recipient = rec.Recipient });
+                _recipientscQueryRepository.Create(new Recipients { EmailId = email.Id, Recipient = rec.Recipient });
             }
 
             new EmailSendler(_configuration, _context, email).SendEmail();

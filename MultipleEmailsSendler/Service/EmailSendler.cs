@@ -12,14 +12,14 @@ namespace MultipleEmailsSendler.Service
         private readonly IConfiguration _configuration;
         private readonly Emails _email;
         private readonly AppDataContext _context;
-        private readonly IGenericRepository<Recipients> _recipientsRepository;
+        private readonly EfGenericQueryRepository<Recipients> _recipientsQueryRepository;
 
         public EmailSendler(IConfiguration configuration, AppDataContext context, Emails email)
         {
             _email = email;
             _configuration = configuration;
             _context = context;
-            _recipientsRepository = new EfGenericRepository<Recipients>(_context);
+            _recipientsQueryRepository = new EfGenericQueryRepository<Recipients>(_context);
         }
 
         /// <summary>  
@@ -62,7 +62,7 @@ namespace MultipleEmailsSendler.Service
                 finally
                 {
                     recipient.SendDate = DateTime.Now;
-                    _recipientsRepository.Update(recipient);
+                    _recipientsQueryRepository.Update(recipient);
                 }
             }
         }

@@ -7,12 +7,12 @@ using MultipleEmailsSendler.Service.Interfaces;
 
 namespace MultipleEmailsSendler.Service
 {
-    public class EfGenericRepository<TEntity> : IGenericRepository<TEntity> where TEntity : class
+    public class EfGenericCommandRepository<TEntity> : ICommandRepository<TEntity> where TEntity : class
     {
         private readonly DbContext _context;
         private readonly DbSet<TEntity> _dbSet;
 
-        public EfGenericRepository(DbContext context)
+        public EfGenericCommandRepository(DbContext context)
         {
             _context = context;
             _dbSet = context.Set<TEntity>();
@@ -30,22 +30,6 @@ namespace MultipleEmailsSendler.Service
         public TEntity FindById(int id)
         {
             return _dbSet.Find(id);
-        }
-
-        public void Create(TEntity item)
-        {
-            _dbSet.Add(item);
-            _context.SaveChanges();
-        }
-        public void Update(TEntity item)
-        {
-            _context.Entry(item).State = EntityState.Modified;
-            _context.SaveChanges();
-        }
-        public void Remove(TEntity item)
-        {
-            _dbSet.Remove(item);
-            _context.SaveChanges();
         }
 
         public IEnumerable<TEntity> GetWithInclude(params Expression<Func<TEntity, object>>[] includeProperties)
