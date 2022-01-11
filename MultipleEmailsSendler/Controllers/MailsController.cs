@@ -40,7 +40,7 @@ namespace MultipleEmailsSendler.Controllers
         [HttpGet]
         public async Task<IEnumerable<Emails>> Mails()
         {
-            return await Task.Run(() => _emailsCommandRepository.GetWithInclude(i => i.Recipients));
+            return await Task.Run(() => _emailsQueryRepository.GetWithInclude(i => i.Recipients));
         }
         // POST api/values
         /// <summary>  
@@ -60,11 +60,11 @@ namespace MultipleEmailsSendler.Controllers
                 MailFrom = _configuration["userNameMail"]
             };
 
-            _emailsQueryRepository.Create(email);
+            _emailsCommandRepository.Create(email);
 
             foreach (var rec in data.Recipients)
             {
-                _recipientscQueryRepository.Create(new Recipients { EmailId = email.Id, Recipient = rec.Recipient });
+                _recipientsCommandRepository.Create(new Recipients { EmailId = email.Id, Recipient = rec.Recipient });
             }
 
             new EmailSendler(_configuration, _context, email).SendEmail();
