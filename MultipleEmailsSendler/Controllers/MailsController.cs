@@ -13,10 +13,7 @@ namespace MultipleEmailsSendler.Controllers
     {
         private readonly EfGenericCommandRepository<Emails> _emailsCommandRepository;
         private readonly EfGenericQueryRepository<Emails> _emailsQueryRepository;
-
         private readonly EfGenericCommandRepository<Recipients> _recipientsCommandRepository;
-        private readonly EfGenericQueryRepository<Recipients> _recipientscQueryRepository;
-
 
         private readonly AppDataContext _context;
         private readonly IConfiguration _configuration;
@@ -30,8 +27,8 @@ namespace MultipleEmailsSendler.Controllers
             _emailsCommandRepository = new EfGenericCommandRepository<Emails>(_context);
             _recipientsCommandRepository = new EfGenericCommandRepository<Recipients>(_context);
 
-            _emailsQueryRepository=new EfGenericQueryRepository<Emails>(context);
-            _recipientscQueryRepository=new EfGenericQueryRepository<Recipients>(context);
+            _emailsQueryRepository=new EfGenericQueryRepository<Emails>(_context);
+
         }
 
         /// <summary>  
