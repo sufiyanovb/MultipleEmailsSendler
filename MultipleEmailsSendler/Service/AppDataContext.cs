@@ -11,9 +11,17 @@ namespace MultipleEmailsSendler.Service
         public AppDataContext(DbContextOptions<AppDataContext> options)
             : base(options)
         {
-          //  Database.EnsureDeleted();
-            Database.EnsureCreated();
+            Database.EnsureDeleted();
         }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Recipients>()
+                .HasOne(u => u.Email)
+                .WithMany(c => c.Recipients)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
+
     }
 }
 
