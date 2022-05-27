@@ -1,2 +1,2 @@
 # MultipleEmailsSendler
-отпрвка email с нескольким получателям (Web Api + Js)
+отправка email с нескольким получателям (Web Api + Js)
