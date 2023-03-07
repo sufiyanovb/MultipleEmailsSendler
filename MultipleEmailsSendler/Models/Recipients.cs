@@ -1,6 +1,5 @@
 ﻿
 using System;
-using System.Text.Json.Serialization;
 
 namespace MultipleEmailsSendler.Models
 {
@@ -22,7 +21,6 @@ namespace MultipleEmailsSendler.Models
 
         public int EmailId { get; set; }
 
-        [JsonIgnore]
         public virtual Emails Email { get; set; }
 
 
