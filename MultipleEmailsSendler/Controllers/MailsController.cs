@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using MultipleEmailsSendler.Models;
 using MultipleEmailsSendler.Models.Dto;
@@ -14,23 +15,22 @@ namespace MultipleEmailsSendler.Controllers
     public class MailsController : ControllerBase
     {
         private readonly EfGenericCommandRepository<Emails> _emailsCommandRepository;
-        private readonly EfGenericQueryRepository<Emails> _emailsQueryRepository;
-        private readonly EfGenericCommandRepository<Recipients> _recipientsCommandRepository;
+
 
         private readonly AppDataContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IMapper _mapper;
 
-        public MailsController(AppDataContext context, IConfiguration configuration)
+
+        public MailsController(AppDataContext context, IConfiguration configuration, IMapper mapper)
         {
             _configuration = configuration;
 
             _context = context;
 
             _emailsCommandRepository = new EfGenericCommandRepository<Emails>(_context);
-            _recipientsCommandRepository = new EfGenericCommandRepository<Recipients>(_context);
 
-            _emailsQueryRepository = new EfGenericQueryRepository<Emails>(_context);
-
+            _mapper = mapper;
         }
 
         /// <summary>  
@@ -39,20 +39,8 @@ namespace MultipleEmailsSendler.Controllers
         [HttpGet]
         public async Task<IEnumerable<EmailsDTO>> Mails()
         {
-            return await Task.Run(() => _context.Emails.Select(i => new EmailsDTO()
-            {
-                Id = i.Id,
-                Body = i.Body,
-                MailFrom = i.MailFrom,
-                Subject = i.Subject,
-                Recipients = i.Recipients.Select(j => new RecipientsDTO()
-                {
-                    ExceptionMessage = j.ExceptionMessage,
-                    Recipient = j.Recipient,
-                    SendDate = j.SendDate,
-                    SendState = j.SendState
-                })
-            }));
+            var emails = await Task.Run(() => (_context.Emails.Include(i => i.Recipients)));
+            return _mapper.Map<List<EmailsDTO>>(emails);
         }
 
 
@@ -61,43 +49,24 @@ namespace MultipleEmailsSendler.Controllers
         ///  Сохранение записей в БД,после чего происходит отправка сообщения получателям
         /// </summary> 
         [HttpPost]
-      
-        public IActionResult Post([FromBody] Emails data)
+
+        public IActionResult Post([FromBody] Emails input)
         {
-            if (data == null)
+            if (input == null)
             {
                 return BadRequest();
             }
-            var email = new Emails()
-            {
-                Subject = data.Subject,
-                Body = data.Body,
-                MailFrom = _configuration["userNameMail"]
-            };
 
-            _emailsCommandRepository.Create(email);
 
-            foreach (var rec in data.Recipients)
-            {
-                _recipientsCommandRepository.Create(new Recipients { EmailId = email.Id, Recipient = rec.Recipient });
-            }
+            input.MailFrom = _configuration["userNameMail"];
 
-            new EmailSendler(_configuration, _context, email).SendEmail();
+            _emailsCommandRepository.Create(input);
 
-            var ret = new EmailsDTO()
-            {
-                Id= email.Id,
-                Subject = email.Subject,
-                Body = email.Body,
-                MailFrom = email.MailFrom,
-                Recipients = email.Recipients.Select(j => new RecipientsDTO()
-                {
-                    ExceptionMessage = j.ExceptionMessage,
-                    Recipient = j.Recipient,
-                    SendDate = j.SendDate,
-                    SendState = j.SendState
-                })
-            };
+            new EmailSendler(_configuration, _context, input).SendEmail();
+
+            EmailsDTO ret = new EmailsDTO();
+
+            _mapper.Map(input, ret);
 
             return Ok(ret);
 

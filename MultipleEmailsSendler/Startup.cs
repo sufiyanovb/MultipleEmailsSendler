@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MultipleEmailsSendler.Service;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
+using MultipleEmailsSendler.Migrations;
 
 namespace MultipleEmailsSendler
 {
@@ -27,6 +28,10 @@ namespace MultipleEmailsSendler
 
             services.AddDbContext<AppDataContext>(options => options.UseSqlServer(connection));
             services.AddControllersWithViews();
+
+            services.AddAutoMapper(typeof(MapperConfig));
+
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
