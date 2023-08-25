@@ -3,7 +3,6 @@ using System;
 using System.Net;
 using System.Net.Mail;
 using MultipleEmailsSendler.Models;
-using MultipleEmailsSendler.Service.Interfaces;
 
 namespace MultipleEmailsSendler.Service
 {
@@ -58,7 +57,6 @@ namespace MultipleEmailsSendler.Service
                     recipient.ExceptionMessage = e.Message;
 
                 }
-
                 finally
                 {
                     recipient.SendDate = DateTime.Now;

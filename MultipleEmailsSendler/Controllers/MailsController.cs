@@ -39,7 +39,7 @@ namespace MultipleEmailsSendler.Controllers
         [HttpGet]
         public async Task<IEnumerable<EmailsDTO>> Mails()
         {
-            var emails = await Task.Run(() => (_context.Emails.Include(i => i.Recipients)));
+            var emails = await Task.Run(() => _context.Emails.Include(i => i.Recipients));
             return _mapper.Map<List<EmailsDTO>>(emails);
         }
 
