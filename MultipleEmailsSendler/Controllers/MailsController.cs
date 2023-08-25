@@ -15,21 +15,15 @@ namespace MultipleEmailsSendler.Controllers
     public class MailsController : ControllerBase
     {
         private readonly EfGenericCommandRepository<Emails> _emailsCommandRepository;
-
-
         private readonly AppDataContext _context;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
 
-
         public MailsController(AppDataContext context, IConfiguration configuration, IMapper mapper)
         {
             _configuration = configuration;
-
             _context = context;
-
             _emailsCommandRepository = new EfGenericCommandRepository<Emails>(_context);
-
             _mapper = mapper;
         }
 
@@ -56,7 +50,6 @@ namespace MultipleEmailsSendler.Controllers
             {
                 return BadRequest();
             }
-
 
             input.MailFrom = _configuration["userNameMail"];
 
