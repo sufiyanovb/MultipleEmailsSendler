@@ -6,15 +6,12 @@
     <title>Список Email</title>
 
     <!-- For the plug-in dependencies -->
-    <script type="text/javascript" src='https://code.jquery.com/jquery-latest.min.js'></script>
-
-    <!-- For Semantic UI Button -->
-    <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/1.12.2/semantic.min.css" />
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/1.12.2/semantic.min.js"></script>
+    <script type="text/javascript" src='https://cdnjs.cloudflare.com/ajax/libs/jquery/4.0.0-beta/jquery.min.js'></script>
 
     <!-- For Bootstrap UI Button -->
     <link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
     <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
 
 
     <script type="text/javascript" src="multiple-emails.js"></script>
@@ -99,87 +96,115 @@
     });
 
     // Получение всех записей
-    function GetMails() {
-        $.ajax({
-            url: '/api/mails',
-            type: 'GET',
-            contentType: "application/json",
-            success: function (mails) {
-                var rows = "";
-                window.$.each(mails,
-                    function (index, mail) {
-                        rows += row(mail);
-                    });
-                window.$("table tbody").append(rows);
-            }
-        });
+    async function GetMails() {
+
+        const response = await fetch('/api/mails');
+
+        if (!response.ok) {
+        }
+
+        const body = await response.text();
+
+        window.$.each(JSON.parse(body),
+            function (index, mail) {
+                row(mail);
+            });
     }
 
     // Добавление записи
-    function CreateMail(subject, body, recipients) {
+    async function CreateMail(subject, body, recipients) {
 
-        $.ajax({
-            url: "api/mails",
-            contentType: "application/json",
-            method: "POST",
-            data: JSON.stringify({
-                subject: subject,
-                body: body,
-                recipients: recipients
-            }),
-            success: function (mail) {
-                reset();
-                $("table tbody").append(row(mail));
+        document.querySelector("#ajax-loader").style.display = '';
+
+        await fetch('api/mails', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
             },
-            beforeSend: function () {
-                $("#ajax-loader").show();
-            },
-            complete: function () {
-                $("#ajax-loader").hide();
-            },
-            error: function (XMLHttpRequest, textStatus, errorThrown) {
+            body: JSON.stringify({ subject, body, recipients })
+        })
+            .then((response) => {
 
-                const errorData = XMLHttpRequest.responseJSON.errors;
-
-                if (errorData) {
-                    $.each(errorData, function (index, value) {
-                        addError(value);
-                    });
-
+                console.log('response', response);
+                if (response.ok) {
+                    return response.json();
                 }
-                document.getElementById("errors").style.display = "block";
-            }
-        });
 
+
+
+                return Promise.reject(response.json()); // 2. reject instead of throw
+
+            })
+            .then((mail) => {
+
+                console.log('mail', mail);
+                console.log('row', row(mail));
+
+
+
+
+                // document.querySelector("table > tbody ").appendChild(row(mail));
+                document.querySelector("#ajax-loader").style.display = 'none';
+
+                reset();
+
+            })
+            .catch(json => {
+
+
+                console.log('JSON', json);
+
+
+                json.then((errors) => {
+
+                    console.log('json', json);
+
+                    addError(errors.errors);
+
+                    document.querySelector("#ajax-loader").style.display = 'none';
+                    document.getElementById("errors").style.display = "block";
+                })
+            });
     }
 
     // сброс формы
     function reset() {
         var form = document.forms["emailForm"];
+
         form.reset();
-        $("#inputcontainer > div > ul").text("");
+
+        document.querySelector("#inputcontainer > div > ul").textContent = "";
+
         form.elements["id"].value = 0;
     }
 
     // создание строки для таблицы
     var row = function (email) {
 
-
         var str = "";
+
+        var ret = "";
+
         $.each(email.recipients, function (index, value) {
 
-            str += "<tr data-rowid='" + email.id + ((index === 0) ? "' rowspan='" + email.recipients.length : "") + "'>" +
-                "<td>" + ((index === 0) ? email.id : "") + "</td>" +
+            var tr = document.createElement("tr");
+
+            if (index === 0) {
+                tr.setAttribute("rowspan", email.recipients.length);
+            }
+            str = "<td>" + ((index === 0) ? email.id : "") + "</td>" +
                 "<td>" + ((index === 0) ? email.subject : "") + "</td> " +
                 "<td>" + ((index === 0) ? email.body : "") + "</td>" +
                 "<td>" + ((index === 0) ? email.mailFrom : "") + "</td>" +
                 "<td>" + value.recipient + "</td>" +
                 "<td>" + new Date(value.sendDate).toLocaleString("ru-Ru") + "</td>" +
                 "<td>" + value.sendState + "</td>" +
-                "<td>" + value.exceptionMessage + "</td>" +
-                "</tr>";
+                "<td><strong>" + value.exceptionMessage + "</strong></td>"
+
+            tr.innerHTML = str;
+            document.querySelector("table > tbody").appendChild(tr);
         });
-        return str;
+        return ret;
     };
 
     // сброс значений формы
@@ -191,6 +216,9 @@
     function addError(errors) {
 
         $.each(errors, function (index, error) {
+
+            //  console.log('error', error);
+
             const p = document.createElement("p");
             p.append(error);
             document.getElementById("errors").append(p);
