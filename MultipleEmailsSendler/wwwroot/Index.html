@@ -1,5 +1,11 @@
 ﻿<!DOCTYPE html>
+
+
 <html>
+
+
+
+
 <head>
     <meta charset="utf-8" />
 
@@ -12,13 +18,14 @@
     <link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
     <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 
-
-
     <script type="text/javascript" src="multiple-emails.js"></script>
     <link type="text/css" rel="stylesheet" href="multiple-emails.css" />
-
-
 </head>
+
+
+
+
+
 <body>
     <h2>Список Email</h2>
 
@@ -51,12 +58,8 @@
                     <a id="reset" class="btn btn-primary">Сбросить</a>
                 </div>
             </form>
-
-
-
         </div>
     </div>
-
     <table class="table table-condensed table-striped  col-md-6">
         <thead>
             <tr>
@@ -82,18 +85,41 @@
 <div id="ajax-loader" style="display: none; width: 69px; height: 89px; border: 1px solid black; position: absolute; top: 50%; left: 50%; padding: 2px;">
     <img src="loader.gif" width="64" height="64" alt="" /><br>
 </div>
+
+
+
 <script>
 
-    $(document).on('keyup keypress', 'form input[type="text"]', function (e) {
+    document.addEventListener("readystatechange", (event) => {
+
+        if (document.readyState === 'complete') {
+
+            const inputs = document.querySelectorAll('form input[type="text"]');
+
+            for (var i = 0; i < inputs.length; i++) {
+
+                inputs[i].addEventListener("keypress", inputEv, false);
+                inputs[i].addEventListener("keyup", inputEv, false);
+            };
+        }
+    });
+
+    function inputEv(e) {
+        console.log('e', e);
         if (e.keyCode == 13) {
             e.preventDefault();
             return false;
         }
-    });
+    }
+
+
 
     $(function () {
         $('#recipients').multiple_emails("Bootstrap");
     });
+
+
+    console.log('recipients');
 
     // Получение всех записей
     async function GetMails() {
@@ -126,39 +152,27 @@
             .then((response) => {
 
                 console.log('response', response);
+
                 if (response.ok) {
+
                     return response.json();
                 }
-
-
-
                 return Promise.reject(response.json()); // 2. reject instead of throw
 
             })
             .then((mail) => {
 
                 console.log('mail', mail);
-                console.log('row', row(mail));
 
+                row(mail);
 
-
-
-                // document.querySelector("table > tbody ").appendChild(row(mail));
                 document.querySelector("#ajax-loader").style.display = 'none';
 
                 reset();
 
             })
             .catch(json => {
-
-
-                console.log('JSON', json);
-
-
                 json.then((errors) => {
-
-                    console.log('json', json);
-
                     addError(errors.errors);
 
                     document.querySelector("#ajax-loader").style.display = 'none';
@@ -221,6 +235,7 @@
 
             const p = document.createElement("p");
             p.append(error);
+
             document.getElementById("errors").append(p);
         });
     };
@@ -245,12 +260,8 @@
                 o.Recipient = value;
                 recipients.push(o)
             });
-        }
-
-        CreateMail(subject, body, recipients);
-
+        } CreateMail(subject, body, recipients);
     });
-
     GetMails();
-
 </script>
+
